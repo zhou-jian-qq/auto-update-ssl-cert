@@ -1,20 +1,36 @@
 services:
   cert-admin:
-    image: "${IMAGE:-ghcr.io/your-github-owner/auto-update-ssl-cert:latest}"
+    # 应用镜像。默认使用 GitHub Actions 自动构建并推送到 GHCR 的镜像。
+    # 如需临时切换版本，可在 .env 中覆盖 IMAGE，例如改成 sha-xxxx 或 v1.0.0 标签。
+    image: "${IMAGE:-ghcr.io/zhou-jian-qq/auto-update-ssl-cert:latest}"
+    # 容器名称，便于 docker logs / docker restart 等命令直接操作。
     container_name: cert-admin
+    # 服务器重启或容器异常退出后自动拉起。
     restart: unless-stopped
     ports:
+      # Web 访问端口。左侧是服务器端口，右侧 8000 是容器内应用端口。
       - "${APP_PORT:-8000}:8000"
     environment:
+      # 页面标题。
       APP_NAME: "${APP_NAME:-行方证书管理后台}"
+      # Session 加密密钥，生产环境必须修改为随机长字符串。
       SECRET_KEY: "${SECRET_KEY:-please-change-this-secret}"
+      # 管理员登录用户名。
       ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
+      # 管理员登录密码，生产环境必须修改。
       ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123456}"
+      # 容器内数据目录，通常不需要修改。
       DATA_DIR: "/app/data"
+      # 定时检查间隔，单位：分钟。默认 720 分钟，即 12 小时。
       CHECK_INTERVAL_MINUTES: "${CHECK_INTERVAL_MINUTES:-720}"
+      # 外部访问后台的地址，用于生成告警消息里的详情链接。
       PUBLIC_BASE_URL: "${PUBLIC_BASE_URL:-http://localhost:${APP_PORT:-8000}}"
+      # 企业微信机器人 Webhook，留空则不发送企业微信通知。
       WECHAT_WEBHOOK_URL: "${WECHAT_WEBHOOK_URL:-}"
+      # 钉钉机器人 Webhook，留空则不发送钉钉通知。
       DINGTALK_WEBHOOK_URL: "${DINGTALK_WEBHOOK_URL:-}"
+      # 同一类告警的限流时间，单位：小时，避免重复刷屏。
       NOTIFY_COOLDOWN_HOURS: "${NOTIFY_COOLDOWN_HOURS:-24}"
     volumes:
+      # 持久化数据库、证书文件和运行数据，升级/重启容器不会丢失。
       - ./data:/app/data

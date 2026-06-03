@@ -1,4 +1,6 @@
 services:
   cert-admin:
+    # 本地开发时从当前源码构建镜像。
     build: .
+    # 本地开发镜像名，不会推送到远程仓库。
     image: cert-admin:dev

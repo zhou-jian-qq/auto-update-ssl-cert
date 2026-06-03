@@ -8,7 +8,7 @@
 
 ```bash
 cp .env.example .env
-# 编辑 .env，把 IMAGE 改成 ghcr.io/<github-owner>/<github-repo>:latest
+# 编辑 .env，至少修改 SECRET_KEY、ADMIN_PASSWORD、PUBLIC_BASE_URL
 docker compose pull
 docker compose up -d
 ```
@@ -35,10 +35,10 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 2. 构建 Docker 镜像。
 3. 推送到 GitHub Container Registry，也就是 `ghcr.io/<github-owner>/<github-repo>`。
 
-默认分支会生成 `latest` 标签，也会生成分支名和 `sha-xxxx` 标签。Linux 服务器部署时只需要配置：
+默认分支会生成 `latest` 标签，也会生成分支名和 `sha-xxxx` 标签。当前默认镜像地址已经写在 `docker-compose.yml` 和 `.env.example` 中：
 
 ```env
-IMAGE=ghcr.io/<github-owner>/<github-repo>:latest
+IMAGE=ghcr.io/zhou-jian-qq/auto-update-ssl-cert:latest
 ```
 
 如果仓库是私有仓库，服务器需要先登录 GHCR：
