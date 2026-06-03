@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+  <div>
+    <a href="/" class="text-sm text-cyan-300 hover:text-cyan-200">返回仪表盘</a>
+    <h1 class="mt-2 text-3xl font-semibold">{{ bank.name }}</h1>
+    <p class="mt-1 font-mono text-sm text-slate-400">{{ bank.host }}:{{ bank.port }}</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <form method="post" action="/banks/{{ bank.id }}/check">
+      <button class="rounded-lg bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-300">立即检查</button>
+    </form>
+    <a href="/banks/{{ bank.id }}/edit" class="rounded-lg border border-white/10 px-4 py-2.5 text-sm hover:bg-white/10">编辑配置</a>
+  </div>
+</div>
+
+<div class="grid gap-6 xl:grid-cols-[1fr_24rem]">
+  <section class="space-y-6">
+    <div class="rounded-xl border border-white/10 bg-white/[.05]">
+      <div class="border-b border-white/10 px-5 py-4">
+        <h2 class="text-lg font-semibold">证书版本</h2>
+        <p class="text-sm text-slate-400">候选证书确认后才会成为当前可用版本。</p>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full text-left text-sm">
+          <thead class="text-xs uppercase text-slate-400">
+            <tr>
+              <th class="px-5 py-3">状态</th>
+              <th class="px-5 py-3">有效期</th>
+              <th class="px-5 py-3">剩余</th>
+              <th class="px-5 py-3">指纹</th>
+              <th class="px-5 py-3 text-right">操作</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/10">
+            {% for cert in certs %}
+            <tr>
+              <td class="px-5 py-4">
+                {% if cert.status == 'confirmed' %}
+                <span class="badge bg-emerald-400/15 text-emerald-200 ring-emerald-400/30">已确认</span>
+                {% elif cert.status == 'candidate' %}
+                <span class="badge bg-sky-400/15 text-sky-200 ring-sky-400/30">候选</span>
+                {% else %}
+                <span class="badge bg-slate-400/15 text-slate-300 ring-slate-400/30">历史</span>
+                {% endif %}
+              </td>
+              <td class="px-5 py-4 text-slate-300">
+                <div>{{ cert.not_before }}</div>
+                <div>{{ cert.not_after }}</div>
+              </td>
+              <td class="px-5 py-4">{{ cert.days_left }} 天</td>
+              <td class="px-5 py-4 font-mono text-xs text-slate-400">{{ cert.sha256_fingerprint[:24] }}...</td>
+              <td class="px-5 py-4">
+                <div class="flex justify-end gap-2">
+                  <a href="/certificates/{{ cert.id }}/download" class="rounded-lg border border-white/10 px-3 py-2 text-sm hover:bg-white/10">下载</a>
+                  {% if cert.status == 'candidate' %}
+                  <form method="post" action="/certificates/{{ cert.id }}/confirm" onsubmit="return confirm('确认这份证书可用？')">
+                    <button class="rounded-lg bg-emerald-400 px-3 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-300">确认</button>
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+            <tr class="bg-slate-950/30">
+              <td colspan="5" class="px-5 py-4">
+                <div class="grid gap-3 text-xs text-slate-400 md:grid-cols-2">
+                  <div><span class="text-slate-300">Subject：</span>{{ cert.subject }}</div>
+                  <div><span class="text-slate-300">Issuer：</span>{{ cert.issuer }}</div>
+                  <div><span class="text-slate-300">Serial：</span>{{ cert.serial_number }}</div>
+                  <div><span class="text-slate-300">SAN：</span>{{ cert.sans or '-' }}</div>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="px-5 py-12 text-center text-slate-400">还没有采集到证书。</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <div class="panel">
+        <h2>检查日志</h2>
+        <div class="mt-4 space-y-3">
+          {% for log in logs %}
+          <div class="rounded-lg bg-slate-950/50 p-3">
+            <div class="flex justify-between gap-4 text-sm"><span>{{ log.status }}</span><span class="text-slate-500">{{ log.checked_at }}</span></div>
+            <p class="mt-1 text-sm text-slate-400">{{ log.message }}</p>
+          </div>
+          {% else %}
+          <p class="text-sm text-slate-400">暂无日志。</p>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="panel">
+        <h2>通知记录</h2>
+        <div class="mt-4 space-y-3">
+          {% for item in notices %}
+          <div class="rounded-lg bg-slate-950/50 p-3">
+            <div class="flex justify-between gap-4 text-sm"><span>{{ item.channel }} / {{ item.status }}</span><span class="text-slate-500">{{ item.sent_at }}</span></div>
+            <p class="mt-1 text-sm text-slate-400">{{ item.message }}</p>
+          </div>
+          {% else %}
+          <p class="text-sm text-slate-400">暂无通知。</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="space-y-6">
+    <div class="panel">
+      <h2>人工上传候选证书</h2>
+      <p class="mt-2 text-sm text-slate-400">银行提前发布新证书但线上 TLS 尚未切换时，可上传 PEM/base64 `.crt`。</p>
+      <form method="post" action="/banks/{{ bank.id }}/upload" enctype="multipart/form-data" class="mt-4 space-y-3">
+        <input name="cert_file" type="file" accept=".crt,.pem" required class="block w-full text-sm text-slate-300 file:mr-4 file:rounded-lg file:border-0 file:bg-cyan-400 file:px-3 file:py-2 file:font-semibold file:text-slate-950">
+        <button class="w-full rounded-lg border border-white/10 px-4 py-2.5 text-sm hover:bg-white/10">上传并解析</button>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>接口配置</h2>
+      <dl class="mt-4 space-y-3 text-sm">
+        <div><dt class="text-slate-500">提醒阈值</dt><dd>{{ bank.threshold_days }} 天</dd></div>
+        <div><dt class="text-slate-500">官网证书页</dt><dd class="break-all">{{ bank.website_url or '-' }}</dd></div>
+        <div><dt class="text-slate-500">备注</dt><dd class="whitespace-pre-wrap">{{ bank.notes or '-' }}</dd></div>
+      </dl>
+    </div>
+    <div class="panel">
+      <h2>下载记录</h2>
+      <div class="mt-4 space-y-3">
+        {% for item in downloads %}
+        <div class="rounded-lg bg-slate-950/50 p-3 text-sm">
+          <div>{{ item.username }}</div>
+          <div class="text-xs text-slate-500">{{ item.downloaded_at }} · {{ item.sha256_fingerprint[:12] }}</div>
+        </div>
+        {% else %}
+        <p class="text-sm text-slate-400">暂无下载记录。</p>
+        {% endfor %}
+      </div>
+    </div>
+  </aside>
+</div>
+{% endblock %}

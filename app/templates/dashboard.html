@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  <div>
+    <p class="text-sm text-cyan-300">Certificate Operations</p>
+    <h1 class="mt-1 text-3xl font-semibold tracking-tight">证书风险仪表盘</h1>
+  </div>
+  <a href="/banks/new" class="inline-flex items-center justify-center rounded-lg bg-cyan-400 px-4 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-300">新增银行接口</a>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="metric"><span>证书总数</span><strong>{{ total_certs }}</strong></div>
+  <div class="metric"><span>即将到期</span><strong class="text-amber-300">{{ warning }}</strong></div>
+  <div class="metric"><span>已过期</span><strong class="text-red-300">{{ expired }}</strong></div>
+  <div class="metric"><span>候选证书</span><strong class="text-sky-300">{{ candidates }}</strong></div>
+</div>
+
+<section class="mt-6 rounded-xl border border-white/10 bg-white/[.05] shadow-xl shadow-slate-950/30">
+  <div class="flex flex-col gap-3 border-b border-white/10 px-5 py-4 md:flex-row md:items-center md:justify-between">
+    <div>
+      <h2 class="text-lg font-semibold">银行接口列表</h2>
+      <p class="text-sm text-slate-400">接口域名和端口用于 TLS 握手采集当前服务端证书。</p>
+    </div>
+    <input id="filter" placeholder="筛选银行、域名、状态" class="w-full rounded-lg border border-white/10 bg-slate-900 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-cyan-400/50 md:w-72" oninput="filterRows(this.value)">
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-left text-sm">
+      <thead class="text-xs uppercase text-slate-400">
+        <tr>
+          <th class="px-5 py-3">银行</th>
+          <th class="px-5 py-3">接口地址</th>
+          <th class="px-5 py-3">剩余天数</th>
+          <th class="px-5 py-3">状态</th>
+          <th class="px-5 py-3">最近更新</th>
+          <th class="px-5 py-3 text-right">操作</th>
+        </tr>
+      </thead>
+      <tbody id="bankRows" class="divide-y divide-white/10">
+        {% for bank in banks %}
+        <tr class="hover:bg-white/[.04]" data-filter="{{ bank.name }} {{ bank.host }} {{ bank.status }}">
+          <td class="px-5 py-4">
+            <div class="font-medium">{{ bank.name }}</div>
+            <div class="text-xs text-slate-500">{{ bank.code }}</div>
+          </td>
+          <td class="px-5 py-4 font-mono text-slate-300">{{ bank.host }}:{{ bank.port }}</td>
+          <td class="px-5 py-4">{{ bank.days_left if bank.days_left is not none else '-' }}</td>
+          <td class="px-5 py-4">{% include "partials/status_badge.html" %}</td>
+          <td class="px-5 py-4 text-slate-400">{{ bank.updated_at }}</td>
+          <td class="px-5 py-4 text-right">
+            <a href="/banks/{{ bank.id }}" class="rounded-lg border border-white/10 px-3 py-2 text-sm hover:bg-white/10">详情</a>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="px-5 py-12 text-center text-slate-400">还没有银行接口配置。</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+function filterRows(value) {
+  const keyword = value.toLowerCase();
+  document.querySelectorAll('#bankRows tr[data-filter]').forEach(row => {
+    row.style.display = row.dataset.filter.toLowerCase().includes(keyword) ? '' : 'none';
+  });
+}
+</script>
+{% endblock %}

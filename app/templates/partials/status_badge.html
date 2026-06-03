@@ -1,0 +1,9 @@
+{% if bank.status == 'healthy' %}
+<span class="badge bg-emerald-400/15 text-emerald-200 ring-emerald-400/30">正常</span>
+{% elif bank.status == 'warning' %}
+<span class="badge bg-amber-400/15 text-amber-200 ring-amber-400/30">即将到期</span>
+{% elif bank.status == 'expired' %}
+<span class="badge bg-red-400/15 text-red-200 ring-red-400/30">已过期</span>
+{% else %}
+<span class="badge bg-slate-400/15 text-slate-300 ring-slate-400/30">未检查</span>
+{% endif %}

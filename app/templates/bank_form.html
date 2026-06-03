@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="mb-6">
+  <a href="{% if bank %}/banks/{{ bank.id }}{% else %}/{% endif %}" class="text-sm text-cyan-300 hover:text-cyan-200">返回</a>
+  <h1 class="mt-2 text-3xl font-semibold">{{ '编辑银行接口' if bank else '新增银行接口' }}</h1>
+</div>
+
+<form method="post" action="{% if bank %}/banks/{{ bank.id }}{% else %}/banks{% endif %}" class="grid gap-6 lg:grid-cols-[1fr_22rem]">
+  <section class="rounded-xl border border-white/10 bg-white/[.05] p-5">
+    <div class="grid gap-4 md:grid-cols-2">
+      <label class="field">
+        <span>银行名称</span>
+        <input name="name" value="{{ bank.name if bank else '' }}" required>
+      </label>
+      <label class="field">
+        <span>银行编码</span>
+        <input name="code" value="{{ bank.code if bank else '' }}" required placeholder="qdccb">
+      </label>
+      <label class="field">
+        <span>接口域名</span>
+        <input name="host" value="{{ bank.host if bank else '' }}" required placeholder="corporbank.qdccb.com">
+      </label>
+      <label class="field">
+        <span>端口</span>
+        <input name="port" type="number" min="1" max="65535" value="{{ bank.port if bank else 443 }}" required>
+      </label>
+      <label class="field">
+        <span>提醒阈值（天）</span>
+        <input name="threshold_days" type="number" min="1" value="{{ bank.threshold_days if bank else 30 }}" required>
+      </label>
+      <label class="field">
+        <span>官网证书页 URL</span>
+        <input name="website_url" value="{{ bank.website_url if bank else '' }}" placeholder="https://...">
+      </label>
+      <label class="field md:col-span-2">
+        <span>备注</span>
+        <textarea name="notes" rows="5">{{ bank.notes if bank else '' }}</textarea>
+      </label>
+    </div>
+  </section>
+  <aside class="rounded-xl border border-white/10 bg-white/[.05] p-5">
+    <h2 class="font-semibold">监控设置</h2>
+    <label class="mt-4 flex items-center gap-3 rounded-lg border border-white/10 bg-slate-900 p-3">
+      <input name="enabled" type="checkbox" class="h-4 w-4 accent-cyan-400" {% if not bank or bank.enabled %}checked{% endif %}>
+      <span>
+        <span class="block text-sm font-medium">启用定时检查</span>
+        <span class="block text-xs text-slate-400">禁用后仍可手动检查。</span>
+      </span>
+    </label>
+    <button class="mt-6 w-full rounded-lg bg-cyan-400 px-4 py-2.5 font-semibold text-slate-950 hover:bg-cyan-300">保存配置</button>
+  </aside>
+</form>
+{% endblock %}

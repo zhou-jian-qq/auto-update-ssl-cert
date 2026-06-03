@@ -1,0 +1,20 @@
+services:
+  cert-admin:
+    image: "${IMAGE:-ghcr.io/your-github-owner/auto-update-ssl-cert:latest}"
+    container_name: cert-admin
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      APP_NAME: "${APP_NAME:-行方证书管理后台}"
+      SECRET_KEY: "${SECRET_KEY:-please-change-this-secret}"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:-admin}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-admin123456}"
+      DATA_DIR: "/app/data"
+      CHECK_INTERVAL_MINUTES: "${CHECK_INTERVAL_MINUTES:-720}"
+      PUBLIC_BASE_URL: "${PUBLIC_BASE_URL:-http://localhost:${APP_PORT:-8000}}"
+      WECHAT_WEBHOOK_URL: "${WECHAT_WEBHOOK_URL:-}"
+      DINGTALK_WEBHOOK_URL: "${DINGTALK_WEBHOOK_URL:-}"
+      NOTIFY_COOLDOWN_HOURS: "${NOTIFY_COOLDOWN_HOURS:-24}"
+    volumes:
+      - ./data:/app/data
